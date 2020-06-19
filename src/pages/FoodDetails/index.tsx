@@ -12,6 +12,8 @@ import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import formatValue from '../../utils/formatValue';
 
+import { useShared } from '../../hooks/shared';
+
 import api from '../../services/api';
 
 import {
@@ -63,6 +65,7 @@ interface Food {
 }
 
 const FoodDetails: React.FC = () => {
+  const { updateFavorites, updateOrders } = useShared();
   const [food, setFood] = useState({} as Food);
   const [extras, setExtras] = useState<Extra[]>([]);
   const [isFavorite, setIsFavorite] = useState(false);
@@ -173,7 +176,9 @@ const FoodDetails: React.FC = () => {
     }
 
     setIsFavorite(!isFavorite);
-  }, [isFavorite, food]);
+
+    updateFavorites();
+  }, [isFavorite, food, updateFavorites]);
 
   const cartTotal = useMemo(() => {
     const total = food.price * foodQuantity;
@@ -193,6 +198,9 @@ const FoodDetails: React.FC = () => {
       product_id: food.id,
       extras: extrasItem,
     });
+
+    updateOrders();
+
     navigation.goBack();
   }
 

@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Image } from 'react-native';
 
+import { useShared } from '../../hooks/shared';
+
 import api from '../../services/api';
 import formatValue from '../../utils/formatValue';
 
@@ -28,28 +30,33 @@ interface Food {
 }
 
 const Orders: React.FC = () => {
+  const { ordersUpdated } = useShared();
   const [orders, setOrders] = useState<Food[]>([]);
 
+  async function loadOrders(): Promise<void> {
+    const response = await api.get<Food[]>('orders');
+
+    const ordersFood = response.data.map(
+      ({ id, name, description, price, thumbnail_url }) => {
+        return {
+          id,
+          name,
+          description,
+          price,
+          thumbnail_url,
+          formattedPrice: formatValue(price),
+        };
+      },
+    );
+
+    setOrders(ordersFood);
+  }
+
   useEffect(() => {
-    async function loadOrders(): Promise<void> {
-      const response = await api.get<Food[]>('orders');
+    loadOrders();
+  }, [ordersUpdated]);
 
-      const ordersFood = response.data.map(
-        ({ id, name, description, price, thumbnail_url }) => {
-          return {
-            id,
-            name,
-            description,
-            price,
-            thumbnail_url,
-            formattedPrice: formatValue(price),
-          };
-        },
-      );
-
-      setOrders(ordersFood);
-    }
-
+  useEffect(() => {
     loadOrders();
   }, []);
 

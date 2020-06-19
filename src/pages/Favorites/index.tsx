@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Image } from 'react-native';
 
+import { useShared } from '../../hooks/shared';
+
 import api from '../../services/api';
 import formatValue from '../../utils/formatValue';
 
@@ -28,28 +30,33 @@ interface Food {
 }
 
 const Favorites: React.FC = () => {
+  const { favoritesUpdated } = useShared();
   const [favorites, setFavorites] = useState<Food[]>([]);
 
+  async function loadFavorites(): Promise<void> {
+    const response = await api.get<Food[]>('favorites');
+
+    const favoritesFoods = response.data.map(
+      ({ id, name, description, price, thumbnail_url }) => {
+        return {
+          id,
+          name,
+          description,
+          price,
+          thumbnail_url,
+          formattedPrice: formatValue(price),
+        };
+      },
+    );
+
+    setFavorites(favoritesFoods);
+  }
+
   useEffect(() => {
-    async function loadFavorites(): Promise<void> {
-      const response = await api.get<Food[]>('favorites');
+    loadFavorites();
+  }, [favoritesUpdated]);
 
-      const favoritesFoods = response.data.map(
-        ({ id, name, description, price, thumbnail_url }) => {
-          return {
-            id,
-            name,
-            description,
-            price,
-            thumbnail_url,
-            formattedPrice: formatValue(price),
-          };
-        },
-      );
-
-      setFavorites(favoritesFoods);
-    }
-
+  useEffect(() => {
     loadFavorites();
   }, []);
 
